@@ -22,24 +22,20 @@ const credentialInput = {
       hash: "https://schema.org/Text",
       provider: "https://schema.org/Text",
       metaPointer: "https://schema.org/URL",
-      customInfo: "https://schema.org/Thing",
+      // customInfo: "https://schema.org/Thing",
     },
     id: "did:pkh:eip155:1:0x12FeD9f987bc340c6bE43fD80aD641E8cD740682",
     hash: "v0.0.0:AjcRjxx7Hp3PKPSNwPeBJjR21pLyA14CVeQ1XijzxUc=",
     provider: "Twitter",
     metaPointer: "https://gitcoin.co/docs.html",
-    customInfo: {
-      field1: "value1",
-      field2: "value2",
-    },
   },
-  credentialStatus: {
-    id: "https://example.edu/credentials/status/3#94567",
-    type: "StatusList2021Entry",
-    statusPurpose: "revocation",
-    statusListIndex: "94567",
-    statusListCredential: "https://example.edu/credentials/status/3",
-  },
+  // credentialStatus: {
+  //   id: "https://example.edu/credentials/status/3#94567",
+  //   type: "StatusList2021Entry",
+  //   statusPurpose: "revocation",
+  //   statusListIndex: "94567",
+  //   statusListCredential: "https://example.edu/credentials/status/3",
+  // },
 };
 
 const options = {
@@ -48,14 +44,11 @@ const options = {
 
 async function verifyCredential(preparedCredential: any, signedCredential: any) {
   // domain: TypedDataDomain, types: Record<string, Array<TypedDataField>>, value: Record<string, any>, signature: SignatureLike
+  // const standardizedTypes = preparedCredential.signingInput.types;
+  const standardizedTypes = signedCredential.proof.eip712Domain.types;
 
-  const standardizedTypes = preparedCredential.signingInput.types;
+  // Delete EIP712Domain so that ethers does not complain about the ambiguous primary type
   delete standardizedTypes.EIP712Domain;
-
-  console.log("\nsignedCredential.proof.proofValue");
-  console.log("===============");
-  console.log(JSON.stringify(signedCredential.proof.proofValue, undefined, 2));
-  console.log("===============");
 
   const signerAddress = ethers.utils.verifyTypedData(
     {
@@ -74,7 +67,7 @@ async function verifyCredential(preparedCredential: any, signedCredential: any) 
 
   if (signerIssuedCredential) {
     console.log("===============");
-    console.log("This credential was signed by the issuer!!!!  ", signerAddress);
+    console.log("!!! This credential was signed by the issuer: ", signerAddress);
     console.log("===============");
 
     const splitSignature = ethers.utils.splitSignature(signedCredential.proof.proofValue);
@@ -119,7 +112,7 @@ export async function createCredential() {
   console.log("CREDENTIAL");
   console.log("===============");
   console.log(JSON.stringify(issuedCredential, undefined, 2));
-  console.log("!!!!!!=============== sending to verify");
+  console.log("===============");
 
   const splitSignature = await verifyCredential(preparedCredential, issuedCredential);
 
@@ -138,9 +131,9 @@ export async function createCredential() {
   console.log("===============");
 
   return {
-    // splitSignature,
-    issuedCredential: JSON.parse(issuedCredential),
-    preparedCredential: JSON.parse(preparedCredential),
+    splitSignature,
+    issuedCredential: issuedCredential,
+    preparedCredential: preparedCredential,
   };
 }
 
